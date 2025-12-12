@@ -443,7 +443,7 @@ def main(args):
                         'args': args,
                     }, checkpoint_path)     
 
-        test_stats = evaluate(data_loader_val, model, device, writer)
+        test_stats = evaluate(data_loader_val, model, device, epoch, writer)
         print(f"Accuracy of the network on the {len(dataset_val)} test images: {test_stats['acc1']:.1f}%")
         max_accuracy = max(max_accuracy, test_stats["acc1"])
         print(f'Max accuracy: {max_accuracy:.2f}%')
@@ -472,6 +472,7 @@ if __name__ == '__main__':
     if args.output_dir:
         Path(args.output_dir).mkdir(parents=True, exist_ok=True)
     main(args)
+
 
 
 
