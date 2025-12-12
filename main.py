@@ -29,6 +29,14 @@ from losses import DistillationLoss
 from samplers import RASampler
 import utils
 
+from torch.utils.tensorboard import SummaryWriter
+
+# TensorBoard setup
+def get_writer(output_dir):
+    log_dir = Path(output_dir) / "tensorboard"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    writer = SummaryWriter(log_dir=str(log_dir))
+    return writer
 
 def get_args_parser():
     parser = argparse.ArgumentParser('Manifold Distillation', add_help=False)
@@ -250,6 +258,8 @@ def main(args):
             prob=args.mixup_prob, switch_prob=args.mixup_switch_prob, mode=args.mixup_mode,
             label_smoothing=args.smoothing, num_classes=args.nb_classes)
 
+    writer = get_writer(output_dir)
+    
     print(f"Creating model: {args.model}")
     model = create_model(
         args.model,
@@ -402,7 +412,7 @@ def main(args):
         train_stats = train_one_epoch(
             model, criterion, data_loader_train,
             optimizer, device, epoch, loss_scaler,
-            args.clip_grad, model_ema, mixup_fn,
+            args.clip_grad, model_ema, mixup_fn, writer,
             set_training_mode=args.finetune == ''  # keep in eval mode during finetuning
         )
 
@@ -433,7 +443,7 @@ def main(args):
                         'args': args,
                     }, checkpoint_path)     
 
-        test_stats = evaluate(data_loader_val, model, device)
+        test_stats = evaluate(data_loader_val, model, device, writer)
         print(f"Accuracy of the network on the {len(dataset_val)} test images: {test_stats['acc1']:.1f}%")
         max_accuracy = max(max_accuracy, test_stats["acc1"])
         print(f'Max accuracy: {max_accuracy:.2f}%')
@@ -462,5 +472,6 @@ if __name__ == '__main__':
     if args.output_dir:
         Path(args.output_dir).mkdir(parents=True, exist_ok=True)
     main(args)
+
 
 
