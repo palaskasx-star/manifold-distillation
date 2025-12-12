@@ -258,7 +258,7 @@ def main(args):
             prob=args.mixup_prob, switch_prob=args.mixup_switch_prob, mode=args.mixup_mode,
             label_smoothing=args.smoothing, num_classes=args.nb_classes)
 
-    writer = get_writer(output_dir)
+    writer = get_writer(args.output_dir)
     
     print(f"Creating model: {args.model}")
     model = create_model(
@@ -472,6 +472,7 @@ if __name__ == '__main__':
     if args.output_dir:
         Path(args.output_dir).mkdir(parents=True, exist_ok=True)
     main(args)
+
 
 
 
