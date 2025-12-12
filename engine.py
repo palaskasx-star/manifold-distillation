@@ -22,7 +22,7 @@ import logging
 def train_one_epoch(model: torch.nn.Module, criterion: DistillationLoss,
                     data_loader: Iterable, optimizer: torch.optim.Optimizer,
                     device: torch.device, epoch: int, loss_scaler, max_norm: float = 0,
-                    model_ema: Optional[ModelEma] = None, mixup_fn: Optional[Mixup] = None,
+                    model_ema: Optional[ModelEma] = None, mixup_fn: Optional[Mixup] = None, writer=None,
                     set_training_mode=True):
     model.train(set_training_mode)
     metric_logger = utils.MetricLogger(delimiter="  ")
@@ -73,11 +73,19 @@ def train_one_epoch(model: torch.nn.Module, criterion: DistillationLoss,
     # gather the stats from all processes
     metric_logger.synchronize_between_processes()
     print("Averaged stats:", metric_logger)
+
+    if writer is not None:
+      writer.add_scalar('Train/Loss/base_loss', metric_logger.loss_base.global_avg, epoch)
+      writer.add_scalar('Train/Loss/distillation_loss', metric_logger.loss_dist.global_avg, epoch)
+      writer.add_scalar('Train/Loss/mf_loss_sample', metric_logger.loss_mf_sample.global_avg, epoch)
+      writer.add_scalar('Train/Loss/mf_loss_patch', metric_logger.loss_mf_patch.global_avg, epoch)
+      writer.add_scalar('Train/Loss/mf_loss_rand', metric_logger.loss_mf_rand.global_avg, epoch)
+        
     return {k: meter.global_avg for k, meter in metric_logger.meters.items()}
 
 
 @torch.no_grad()
-def evaluate(data_loader, model, device):
+def evaluate(data_loader, model, device, writer=None):
     criterion = torch.nn.CrossEntropyLoss()
 
     metric_logger = utils.MetricLogger(delimiter="  ")
@@ -106,4 +114,8 @@ def evaluate(data_loader, model, device):
     print('* Acc@1 {top1.global_avg:.3f} Acc@5 {top5.global_avg:.3f} loss {losses.global_avg:.3f}'
           .format(top1=metric_logger.acc1, top5=metric_logger.acc5, losses=metric_logger.loss))
 
+    if writer is not None:
+      writer.add_scalar('Test/Acc@1', metric_logger.acc1.global_avg, epoch)
+      writer.add_scalar('Test/Acc@5', metric_logger.acc5.global_avg, epoch)
+      writer.add_scalar('Test/Loss', metric_logger.loss.global_avg, epoch)
     return {k: meter.global_avg for k, meter in metric_logger.meters.items()}
