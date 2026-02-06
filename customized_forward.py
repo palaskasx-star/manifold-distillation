@@ -121,29 +121,18 @@ def vit_forward_features(self, x: torch.Tensor, attn_mask: Optional[torch.Tensor
     for idx, blk in enumerate(self.blocks):
         x = blk(x)
         block_outs.append(x)
-        
-
     x = self.norm(x)
+    
     return x, block_outs
 
-
-def vit_dist_forward_head(self, x, pre_logits: bool = False) -> torch.Tensor:
-    x, x_dist = x[:, 0], x[:, 1]
-    if pre_logits:
-        return (x + x_dist) / 2
-    x = self.head(x)
-    x_dist = self.head_dist(x_dist)
-    if self.distilled_training and self.training and not torch.jit.is_scripting():
-        # only return separate classification predictions when training in distilled mode
-        return x, x_dist
-    else:
-        # during standard train / finetune, inference average the classifier predictions
-        return (x + x_dist) / 2
 
 def vit_forward(self, x: torch.Tensor, attn_mask: Optional[torch.Tensor] = None, require_feat: bool = False) -> torch.Tensor:
     x, block_outs = self.forward_features(x, attn_mask=attn_mask)
     x = self.forward_head(x)
-    return x, block_outs
+    if require_feat:
+        return x, block_outs
+    else:
+        return x
 
 # cait
 def cait_forward_features(self, x, require_feat: bool = False):
