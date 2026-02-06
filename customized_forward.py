@@ -18,7 +18,7 @@ import torch
 from typing import Optional
 
 
-def register_forward(model, model_name, out_indices ):
+def register_forward(model, model_name):
     if model_name.split('_')[0] == 'deit' or model_name.split('_')[0] == 'deit3':
         model.forward_features = MethodType(vit_forward_features, model)
         model.forward = MethodType(vit_forward, model)
@@ -33,11 +33,6 @@ def register_forward(model, model_name, out_indices ):
         model.forward = MethodType(dinov3_forward, model)
     else:
         raise RuntimeError(f'Not defined customized method forward for model {model_name}')
-
-    if out_indices is not None:
-        model.out_indices = set(out_indices)
-    else:
-        model.out_indices = set(range(len(model.blocks)))
 
 def dinov3_forward_features(self, x: torch.Tensor, require_feat: bool = False) -> torch.Tensor:
     """Forward pass through feature extraction layers.
@@ -65,45 +60,35 @@ def dinov3_forward_features(self, x: torch.Tensor, require_feat: bool = False) -
         for i, blk in enumerate(self.blocks):
             if self.grad_checkpointing and not torch.jit.is_scripting():
                 x = checkpoint(blk, x, rope=rot_pos_embed[i])
-                if idx in self.out_indices:
-                    cls_t = x[:, 0:1] 
-                    patch_t = x[:, 1+num_reg:] 
-                    combined = torch.cat([cls_t, patch_t], dim=1)
-                    block_outs.append(combined.clone())
-                else:
-                    block_outs.append([])
+                cls_t = x[:, 0:1] 
+                patch_t = x[:, 1+num_reg:] 
+                combined = torch.cat([cls_t, patch_t], dim=1)
+                block_outs.append(combined.clone())
+
 
             else:
                 x = blk(x, rope=rot_pos_embed[i])
-                if idx in self.out_indices:
-                    cls_t = x[:, 0:1] 
-                    patch_t = x[:, 1+num_reg:] 
-                    combined = torch.cat([cls_t, patch_t], dim=1)
-                    block_outs.append(combined.clone())
-                else:
-                    block_outs.append([])
+                cls_t = x[:, 0:1] 
+                patch_t = x[:, 1+num_reg:] 
+                combined = torch.cat([cls_t, patch_t], dim=1)
+                block_outs.append(combined.clone())
+
     else:
         # Standard path for non-mixed mode
         for idx, blk in enumerate(self.blocks):
             if self.grad_checkpointing and not torch.jit.is_scripting():
                 x = checkpoint(blk, x, rope=rot_pos_embed)
-                if idx in self.out_indices:
-                    cls_t = x[:, 0:1] 
-                    patch_t = x[:, 1+num_reg:] 
-                    combined = torch.cat([cls_t, patch_t], dim=1)
-                    block_outs.append(combined.clone())
-                else:
-                    block_outs.append([])
+                cls_t = x[:, 0:1] 
+                patch_t = x[:, 1+num_reg:] 
+                combined = torch.cat([cls_t, patch_t], dim=1)
+                block_outs.append(combined.clone())
+
             else:
                 x = blk(x, rope=rot_pos_embed)
-                if idx in self.out_indices:
-                    cls_t = x[:, 0:1] 
-                    patch_t = x[:, 1+num_reg:] 
-                    combined = torch.cat([cls_t, patch_t], dim=1)
-                    block_outs.append(combined.clone())
-                else:
-                    block_outs.append([])
-
+                cls_t = x[:, 0:1] 
+                patch_t = x[:, 1+num_reg:] 
+                combined = torch.cat([cls_t, patch_t], dim=1)
+                block_outs.append(combined.clone())
 
     x = self.norm(x)
     
@@ -135,10 +120,8 @@ def vit_forward_features(self, x: torch.Tensor, attn_mask: Optional[torch.Tensor
 
     for idx, blk in enumerate(self.blocks):
         x = blk(x)
-        if idx in self.out_indices:
-            block_outs.append(x)
-        else:
-            block_outs.append([])
+        block_outs.append(x)
+        
 
     x = self.norm(x)
     return x, block_outs
@@ -237,7 +220,6 @@ def regnet_forward(self, x, require_feat: bool = True):
         return logits, feats
     else:
         return self.forward_features(x)
-
 
 
 
