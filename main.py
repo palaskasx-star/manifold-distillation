@@ -110,7 +110,7 @@ def get_args_parser():
                         help='LR decay rate (default: 0.1)')
 
     # Augmentation parameters
-    parser.add_argument('--color-jitter', type=float, default=0.4, metavar='PCT',
+    parser.add_argument('--color-jitter', type=float, default=0.3, metavar='PCT',
                         help='Color jitter factor (default: 0.4)')
     parser.add_argument('--aa', type=str, default='rand-m9-mstd0.5-inc1', metavar='NAME',
                         help='Use AutoAugment policy. "v0" or "original". " + \
@@ -350,7 +350,7 @@ def main(args):
             args.teacher_model,
             pretrained=False,
             num_classes=args.nb_classes,
-            global_pool='avg',
+            #global_pool='avg',
         )
         register_forward(teacher_model, args.teacher_model)
 
@@ -472,6 +472,7 @@ if __name__ == '__main__':
     if args.output_dir:
         Path(args.output_dir).mkdir(parents=True, exist_ok=True)
     main(args)
+
 
 
 
