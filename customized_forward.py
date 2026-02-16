@@ -103,9 +103,13 @@ def dinov3_forward(self, x: torch.Tensor, require_feat: bool = False) -> torch.T
     Returns:
         Output tensor.
     """
-    x, block_outs = self.forward_features(x)
+    x, block_outs = self.forward_features(x, attn_mask=attn_mask)
     x = self.forward_head(x)
-    return x, block_outs
+    
+    if require_feat:
+        return x, block_outs
+    else:
+        return x
 
 # deit & vit
 def vit_forward_features(self, x: torch.Tensor, attn_mask: Optional[torch.Tensor] = None, require_feat: bool = False) -> torch.Tensor:
@@ -127,7 +131,12 @@ def vit_forward_features(self, x: torch.Tensor, attn_mask: Optional[torch.Tensor
 def vit_forward(self, x: torch.Tensor, attn_mask: Optional[torch.Tensor] = None, require_feat: bool = False) -> torch.Tensor:
     x, block_outs = self.forward_features(x, attn_mask=attn_mask)
     x = self.forward_head(x)
-    return x, block_outs
+    
+    if require_feat:
+        return x, block_outs
+    else:
+        return x
+
 
 # cait
 def cait_forward_features(self, x, require_feat: bool = False):
@@ -201,3 +210,4 @@ def regnet_forward(self, x, require_feat: bool = True):
         return logits, feats
     else:
         return self.forward_features(x)
+
