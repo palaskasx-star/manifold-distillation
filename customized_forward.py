@@ -94,7 +94,7 @@ def dinov3_forward_features(self, x: torch.Tensor, require_feat: bool = False) -
 
 
 
-def dinov3_forward(self, x: torch.Tensor, require_feat: bool = False) -> torch.Tensor:
+def dinov3_forward(self, x: torch.Tensor, require_feat: bool = True) -> torch.Tensor:
     """Forward pass.
 
     Args:
@@ -113,7 +113,7 @@ def dinov3_forward(self, x: torch.Tensor, require_feat: bool = False) -> torch.T
         return x
 
 # deit & vit
-def vit_forward_features(self, x: torch.Tensor, attn_mask: Optional[torch.Tensor] = None, require_feat: bool = False) -> torch.Tensor:
+def vit_forward_features(self, x: torch.Tensor, attn_mask: Optional[torch.Tensor] = None, require_feat: bool = True) -> torch.Tensor:
     """Forward pass through feature layers (embeddings, transformer blocks, post-transformer norm)."""
     x = self.patch_embed(x)
     x = self._pos_embed(x)
@@ -129,7 +129,7 @@ def vit_forward_features(self, x: torch.Tensor, attn_mask: Optional[torch.Tensor
     return x, block_outs
 
 
-def vit_forward(self, x: torch.Tensor, attn_mask: Optional[torch.Tensor] = None, require_feat: bool = False) -> torch.Tensor:
+def vit_forward(self, x: torch.Tensor, attn_mask: Optional[torch.Tensor] = None, require_feat: bool = True) -> torch.Tensor:
     x, block_outs = self.forward_features(x, attn_mask=attn_mask)
     x = self.forward_head(x)
     
@@ -211,5 +211,6 @@ def regnet_forward(self, x, require_feat: bool = True):
         return logits, feats
     else:
         return self.forward_features(x)
+
 
 
