@@ -103,7 +103,8 @@ def dinov3_forward(self, x: torch.Tensor, require_feat: bool = False) -> torch.T
     Returns:
         Output tensor.
     """
-    x, block_outs = self.forward_features(x, attn_mask=attn_mask)
+    
+    x, block_outs = self.forward_features(x)
     x = self.forward_head(x)
     
     if require_feat:
@@ -210,4 +211,5 @@ def regnet_forward(self, x, require_feat: bool = True):
         return logits, feats
     else:
         return self.forward_features(x)
+
 
