@@ -70,8 +70,8 @@ def dinov3_forward_features(self, x: torch.Tensor, require_feat: bool = False) -
                 x = blk(x, rope=rot_pos_embed[i])
                 cls_t = x[:, 0:1] 
                 patch_t = x[:, 1+num_reg:] 
-                #combined = torch.cat([cls_t, patch_t], dim=1)
-                combined = patch_t
+                combined = torch.cat([cls_t, patch_t], dim=1)
+                #combined = patch_t
                 block_outs.append(combined.clone())
     else:
         # Standard path for non-mixed mode
@@ -86,8 +86,8 @@ def dinov3_forward_features(self, x: torch.Tensor, require_feat: bool = False) -
                 x = blk(x, rope=rot_pos_embed)
                 cls_t = x[:, 0:1] 
                 patch_t = x[:, 1+num_reg:] 
-                #combined = torch.cat([cls_t, patch_t], dim=1)
-                combined = patch_t
+                combined = torch.cat([cls_t, patch_t], dim=1)
+                #combined = patch_t
                 block_outs.append(combined.clone())
 
     x = self.norm(x)
@@ -213,6 +213,7 @@ def regnet_forward(self, x, require_feat: bool = True):
         return logits, feats
     else:
         return self.forward_features(x)
+
 
 
 
